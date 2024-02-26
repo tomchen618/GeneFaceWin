@@ -290,7 +290,8 @@ class RADNeRFTask(BaseTask):
         # log and update lambda_ambient
         try:
             target_ambient_loss = hparams['target_ambient_loss'] # 1e-7
-            current_ambient_loss = loss_output['ambient_loss'].item()
+            # removed .item() for the type int  Tom Chen 2024-02-26
+            current_ambient_loss = loss_output['ambient_loss']          #.item()
             grad_lambda_ambient = (math.log10(current_ambient_loss+1e-15) - math.log10(target_ambient_loss+1e-15)) # 如果需要增大lambda_ambient， 则current_loss大于targt，grad值大于0
             lr_lambda_ambient = hparams['lr_lambda_ambient']
             self.model.lambda_ambient.data = self.model.lambda_ambient.data + grad_lambda_ambient * lr_lambda_ambient
