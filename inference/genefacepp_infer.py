@@ -573,8 +573,12 @@ class GeneFace2Infer:
         ret = os.system(cmd)
         if ret == 0:
             print(f"Saved at {inp['out_name']}")
-            os.system(f"rm {self.wav16k_name}")
-            os.system(f"rm {tmp_out_name}")
+            if os.name == "nt":
+                os.system(f"rd /s /q {self.wav16k_name}")
+                os.system(f"rd /s /q {tmp_out_name}")
+            else:
+                os.system(f"rm {self.wav16k_name}")
+                os.system(f"rm {tmp_out_name}")
         else:
             raise ValueError(
                 f"error running {cmd}, please check ffmpeg installation, especially check whether it supports libx264!")

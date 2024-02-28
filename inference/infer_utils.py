@@ -141,7 +141,10 @@ def extract_audio_motion_from_ref_video(video_name):
     wav16k_name = save_wav16k(video_name)
     f0 = get_f0(wav16k_name)
     hubert = get_hubert(wav16k_name)
-    os.system(f"rm {wav16k_name}")
+    if os.name == "nt":
+        os.system(f"rd /s /q {wav16k_name}")
+    else:
+        os.system(f"rm {wav16k_name}")
     exp = get_exp(video_name)
     target_length = min(len(exp), len(hubert)//2, len(f0)//2)
     exp = exp[:target_length]

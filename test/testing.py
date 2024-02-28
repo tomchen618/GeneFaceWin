@@ -33,7 +33,8 @@ def remove_file(*fns):
             else:
                 fs = f.split("/")
                 base_dir = os.getcwd()
-                base_dir = Path(base_dir).parent
+                while Path(base_dir).stem.find('GeneFace') != 0:
+                    base_dir = Path(base_dir).parent
                 f = base_dir
                 for ff in fs:
                     f = os.path.join(f, ff)
@@ -45,6 +46,10 @@ def remove_file(*fns):
 
 
 if __name__ == '__main__':
+    file_path ="./checkpoints/audio2motion_vae/config.yaml"
+    ret = os.path.exists(file_path)
+    s = os.path.dirname(audio2secc_dir)
+    print(s)
     sys.stdout.reconfigure(encoding='utf-8')
     c = "tasks"
     code_dir = "checkpoints/motion2video_nerf/hewei_head/codes/test.txt"
