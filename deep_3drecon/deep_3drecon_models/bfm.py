@@ -1,5 +1,6 @@
 """This script defines the parametric 3d face model for Deep3DFaceRecon_pytorch
 """
+from pathlib import Path
 
 import numpy as np
 import torch
@@ -37,7 +38,8 @@ class ParametricFaceModel:
                 is_train=True,
                 default_name='BFM_model_front.mat',
                 keypoint_mode='mediapipe'):
-        
+        self.base_dir = ""
+        bfm_folder = self.get_win_dir(bfm_folder,"")
         model = loadmat(os.path.join(bfm_folder, default_name))
         # mean face shape. [3*N,1]
         self.mean_shape = model['meanshape'].astype(np.float32)
@@ -55,7 +57,10 @@ class ParametricFaceModel:
         self.face_buf = model['tri'].astype(np.int64) - 1
         # vertex indices for 68 landmarks. starts from 0. [68,1]
         if keypoint_mode == 'mediapipe':
-            self.keypoints = np.load("deep_3drecon/BFM/index_mp468_from_mesh35709.npy").astype(np.int64)
+            bfm_file = "deep_3drecon/BFM/index_mp468_from_mesh35709.npy"
+            if os.name == "nt":
+                bfm_file = self.get_win_dir(bfm_file,"")
+            self.keypoints = np.load(bfm_file).astype(np.int64)
             unmatch_mask = self.keypoints < 0
             self.keypoints[unmatch_mask] = 0
         else:
@@ -87,6 +92,23 @@ class ParametricFaceModel:
         self.init_lit = init_lit.reshape([1, 1, -1]).astype(np.float32)
 
         self.initialized = False
+
+    def get_win_dir(self, dir_strs: str, file: str):
+        cur_dir = os.getcwd()
+        self.base_dir = Path(cur_dir)
+        while self.base_dir.stem.find("GeneFace") != 0:
+            self.base_dir = self.base_dir.parent
+        if dir_strs !="" :
+            base_dir_temp = self.base_dir
+            ds = dir_strs.split("/")
+            if len(ds) == 1:
+                ds = dir_strs.split("\\")
+            for s in ds:
+                base_dir_temp = os.path.join(base_dir_temp, s)
+            if file != "":
+                base_dir_temp = os.path.join(base_dir_temp, file)
+            return base_dir_temp
+        return self.base_dir
 
     def to(self, device):
         self.device = device

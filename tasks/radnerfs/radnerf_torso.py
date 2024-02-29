@@ -132,6 +132,7 @@ class RADNeRFTorsoTask(RADNeRFTask):
         }
         total_loss = sum([loss_weights.get(k, 1) * v for k, v in loss_output.items() if isinstance(v, torch.Tensor) and v.requires_grad])
         def mse2psnr(x): return -10. * torch.log(x) / torch.log(torch.Tensor([10.])).to(x.device)
+        print("here2:____________________________________")
         loss_output['image_psnr'] = mse2psnr(loss_output['torso_mse_loss'].detach())
         outputs.update(loss_output)
 

@@ -14,8 +14,10 @@ def num_params(model, print_out=True, model_name="model"):
         print(f'| {model_name} Trainable Parameters: %.3fM' % parameters)
     return parameters
 
+
 def get_device_of_model(model):
     return model.parameters().__next__().device
+
 
 def requires_grad(model):
     if isinstance(model, torch.nn.Module):
@@ -23,6 +25,7 @@ def requires_grad(model):
             p.requires_grad = True
     else:
         model.requires_grad = True
+
 
 def not_requires_grad(model):
     if isinstance(model, torch.nn.Module):

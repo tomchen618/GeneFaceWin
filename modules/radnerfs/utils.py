@@ -25,7 +25,7 @@ import torch.distributed as dist
 from torch.utils.data import Dataset, DataLoader
 
 import trimesh
-import mcubes
+import mcubes  # pip install PyMCubes==0.1.4
 
 from utils.commons.hparams import hparams
 from packaging import version as pver

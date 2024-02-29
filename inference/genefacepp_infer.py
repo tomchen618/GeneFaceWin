@@ -88,9 +88,9 @@ def inject_blink_to_lm68(lm68, opened_eye_area_percent=0.6, closed_eye_area_perc
     eye_area_percent = 0.6 * torch.ones([len(lm68), 1], dtype=opened_eye_lm68.dtype, device=opened_eye_lm68.device)
 
     eye_open_scale = (opened_eye_lm68[:, 41, 1] - opened_eye_lm68[:, 37, 1]) + (
-                opened_eye_lm68[:, 40, 1] - opened_eye_lm68[:, 38, 1]) + (
-                                 opened_eye_lm68[:, 47, 1] - opened_eye_lm68[:, 43, 1]) + (
-                                 opened_eye_lm68[:, 46, 1] - opened_eye_lm68[:, 44, 1])
+            opened_eye_lm68[:, 40, 1] - opened_eye_lm68[:, 38, 1]) + (
+                             opened_eye_lm68[:, 47, 1] - opened_eye_lm68[:, 43, 1]) + (
+                             opened_eye_lm68[:, 46, 1] - opened_eye_lm68[:, 44, 1])
     eye_open_scale = eye_open_scale.abs()
     idx_largest_eye = eye_open_scale.argmax()
     # lm68[:, list(range(17,27))] = lm68[idx_largest_eye:idx_largest_eye+1, list(range(17,27))].repeat([len(lm68),1,1])
@@ -118,7 +118,7 @@ def inject_blink_to_lm68(lm68, opened_eye_area_percent=0.6, closed_eye_area_perc
                 blink_factor = blink_factor_lst[j]
                 lm68[idx, 36:48] = lm68[idx, 36:48] * (1 - blink_factor) + closed_eye_lm68[idx, 36:48] * blink_factor
                 eye_area_percent[idx] = opened_eye_area_percent * (
-                            1 - blink_factor) + closed_eye_area_percent * blink_factor
+                        1 - blink_factor) + closed_eye_area_percent * blink_factor
     return lm68, eye_area_percent
 
 
@@ -142,7 +142,7 @@ class GeneFace2Infer:
         self.face3d_helper = Face3DHelper(keypoint_mode='mediapipe', use_gpu=True)
         hparams['infer_smooth_camera_path_kernel_size'] = 7
 
-    def getreal_file(self, file_dir)->str:
+    def getreal_file(self, file_dir) -> str:
         # this  function is  for win directory Tom Chen 2024-02-26
         exe_dir = os.getcwd()
         base_dir = Path(exe_dir)
@@ -155,12 +155,13 @@ class GeneFace2Infer:
         if not os.path.isfile(config_dir):
             config_dir = os.path.join(config_dir, "config.yaml")
         return config_dir
+
     def load_audio2secc(self, audio2secc_dir):
         # config = os.path.dirname(audio2secc_dir) + " " + config_dir
         # print("config_dir:", config)
         config_dir = self.getreal_file(audio2secc_dir)
         set_hparams(config_dir)
-         # set_hparams(f"{os.path.dirname(audio2secc_dir) if os.path.isfile(audio2secc_dir) else audio2secc_dir}/config.yaml")
+        # set_hparams(f"{os.path.dirname(audio2secc_dir) if os.path.isfile(audio2secc_dir) else audio2secc_dir}/config.yaml")
         self.audio2secc_hparams = copy.deepcopy(hparams)
         if hparams["motion_type"] == 'id_exp':
             self.in_out_dim = 80 + 64

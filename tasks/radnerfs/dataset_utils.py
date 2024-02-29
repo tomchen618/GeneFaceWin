@@ -1,4 +1,6 @@
 import os
+from pathlib import Path
+
 import tqdm
 import torch
 import torch.nn.functional as F
@@ -161,7 +163,10 @@ class RADNeRFDataset(torch.utils.data.Dataset):
     def __init__(self, prefix, data_dir=None, training=True):
         super().__init__()
         self.hparams = hparams
-        self.data_dir = os.path.join(hparams['binary_data_dir'], hparams['video_id']) if data_dir is None else data_dir
+        self.base_dir = ""
+        self.get_win_dir("","")
+        binary_data_dir = self.get_win_dir(hparams['binary_data_dir'],"")
+        self.data_dir = os.path.join(binary_data_dir, hparams['video_id']) if data_dir is None else data_dir
         binary_file_name = os.path.join(self.data_dir, "trainval_dataset.npy")
         self.ds_dict = ds_dict = np.load(binary_file_name, allow_pickle=True).tolist()
         if prefix == 'train':
@@ -297,6 +302,23 @@ class RADNeRFDataset(torch.utils.data.Dataset):
         self.training = training
         self.global_step = 0
 
+    def get_win_dir(self, dir_strs: str, file: str):
+        cur_dir = os.getcwd()
+        if self.base_dir is None or (dir_strs=="" and file==""):
+            self.base_dir = Path(cur_dir)
+            while self.base_dir.stem.find("GeneFace") != 0:
+                self.base_dir = self.base_dir.parent
+            return self.base_dir
+        else:
+            base_dir_temp = self.base_dir
+            ds = dir_strs.split("/")
+            if len(ds) == 1:
+                ds = dir_strs.split("\\")
+            for s in ds:
+                base_dir_temp = os.path.join(base_dir_temp, s)
+            if file != "":
+                base_dir_temp= os.path.join(base_dir_temp, file)
+            return base_dir_temp
     @property
     def num_rays(self):
         return hparams['n_rays'] if self.training else -1

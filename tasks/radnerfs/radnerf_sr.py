@@ -285,6 +285,7 @@ class RADNeRFTask(BaseTask):
                 # when finetuning with lpips, we don't update the density grid and bitfield.
                 self.model.update_extra_state()
 
+        print("head_psnr2:_______________________", sample)
         loss_output, model_out = self.run_model(sample)
         loss_weights = {
             'mse_loss': 1.0,
@@ -299,6 +300,8 @@ class RADNeRFTask(BaseTask):
             'dual_feature_matching_loss': hparams['lambda_dual_fm'] if self.global_step >= hparams[
                 'lpips_start_iters'] else 0
         }
+        # for k, v in loss_output.items():
+        #     print(k, "-", str(v))
         total_loss = sum(
             [loss_weights[k] * v for k, v in loss_output.items() if isinstance(v, torch.Tensor) and v.requires_grad])
 
@@ -306,6 +309,7 @@ class RADNeRFTask(BaseTask):
             return -10. * torch.log(x) / torch.log(torch.Tensor([10.])).to(x.device)
 
         loss_output['head_psnr'] = mse2psnr(loss_output['mse_loss'].detach())
+        # print("head_psnr2:_______________________________________________", loss_output['head_psnr'])
         outputs.update(loss_output)
 
         # log and update lambda_ambient

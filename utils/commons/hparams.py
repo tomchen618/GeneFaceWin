@@ -1,6 +1,8 @@
 import argparse
 import json
 import os
+from pathlib import Path
+
 import yaml
 
 from utils.commons.os_utils import remove_file
@@ -13,6 +15,22 @@ class Args:
     def __init__(self, **kwargs):
         for k, v in kwargs.items():
             self.__setattr__(k, v)
+
+
+def get_win_dir(dir_strs: str, file: str):
+    cur_dir = os.getcwd()
+    base_dir = Path(cur_dir)
+    while base_dir.stem.find("GeneFace") != 0:
+        base_dir = base_dir.parent
+
+    ds = dir_strs.split("/")
+    if len(ds) == 1:
+        ds = dir_strs.split("\\")
+    for s in ds:
+        base_dir = os.path.join(base_dir, s)
+    if file != "":
+        base_dir = os.path.join(base_dir, file)
+    return base_dir
 
 
 def override_config(old_config: dict, new_config: dict):
@@ -55,7 +73,7 @@ def load_config(config_fn, config_chains, loaded_configs):
     if not os.path.exists(config_fn):
         print(f"| WARN: {config_fn} not exist.", )
         return {}
-    with open(config_fn) as f:
+    with open(config_fn, 'r', encoding='utf-8') as f:
         hparams_ = yaml.safe_load(f)
     loaded_configs.add(config_fn)
 
@@ -67,7 +85,12 @@ def load_config(config_fn, config_chains, loaded_configs):
             hparams_['base_config'] = [hparams_['base_config']]
         for c in hparams_['base_config']:
             if c.startswith('.'):
-                c = f'{os.path.dirname(config_fn)}/{c}'
+                if os.name == "nt":
+                    base_dir = get_win_dir("egs/egs_bases/radnerf", "")
+                    c = c[2:len(c)]
+                    c = os.path.join(base_dir, c)
+                else:
+                    c = f'{os.path.dirname(config_fn)}/{c}'
                 c = os.path.normpath(c)
             if c not in loaded_configs:
                 override_config(ret_hparams, load_config(c, config_chains, loaded_configs))
@@ -92,8 +115,10 @@ def set_hparams(config='', exp_name='', hparams_str='', print_hparams=True, glob
         parser.add_argument('--reset', action='store_true', help='reset hparams')
         parser.add_argument('--remove', action='store_true', help='remove old ckpt')
         parser.add_argument('--debug', action='store_true', help='debug')
-        parser.add_argument('--start_rank', type=int, default=0, help='the start rank id for DDP, keep 0 when single-machine multi-GPU')
-        parser.add_argument('--world_size', type=int, default=-1, help='the total number of GPU used across all machines, keep -1 for single-machine multi-GPU')
+        parser.add_argument('--start_rank', type=int, default=0,
+                            help='the start rank id for DDP, keep 0 when single-machine multi-GPU')
+        parser.add_argument('--world_size', type=int, default=-1,
+                            help='the total number of GPU used across all machines, keep -1 for single-machine multi-GPU')
         parser.add_argument('--init_method', type=str, default='tcp', help='method to init ddp, use tcp or file')
 
         args, unknown = parser.parse_known_args()
@@ -101,17 +126,24 @@ def set_hparams(config='', exp_name='', hparams_str='', print_hparams=True, glob
             print("| set_hparams Unknow hparams: ", unknown)
     else:
         args = Args(config=config, exp_name=exp_name, hparams=hparams_str,
-                    infer=False, validate=False, reset=False, debug=False, remove=False, start_rank=0, world_size=-1, init_method='tcp')
+                    infer=False, validate=False, reset=False, debug=False, remove=False, start_rank=0, world_size=-1,
+                    init_method='tcp')
     global hparams
     assert args.config != '' or args.exp_name != ''
     if args.config != '':
-        assert os.path.exists(args.config), args.config
+        if os.name == "nt":
+            args.config = get_win_dir(args.config, "")
+            assert os.path.exists(args.config), args.config
+        else:
+            assert os.path.exists(args.config), args.config
 
     saved_hparams = {}
     args_work_dir = ''
     if args.exp_name != '':
         args_work_dir = f'checkpoints/{args.exp_name}'
         ckpt_config_path = f'{args_work_dir}/config.yaml'
+        if os.name == "nt":
+            ckpt_config_path = get_win_dir(args_work_dir, "config.yaml")
         if os.path.exists(ckpt_config_path):
             with open(ckpt_config_path) as f:
                 saved_hparams_ = yaml.safe_load(f)
@@ -174,7 +206,7 @@ def set_hparams(config='', exp_name='', hparams_str='', print_hparams=True, glob
     hparams_['validate'] = args.validate
     hparams_['exp_name'] = args.exp_name
 
-    hparams_['start_rank'] = args.start_rank # useful for multi-machine training
+    hparams_['start_rank'] = args.start_rank  # useful for multi-machine training
     hparams_['world_size'] = args.world_size
     hparams_['init_method'] = args.init_method
 
@@ -189,6 +221,7 @@ def set_hparams(config='', exp_name='', hparams_str='', print_hparams=True, glob
         #     print(f"\033[;33;m{k}\033[0m: {v}, ", end="\n" if i % 5 == 4 else "")
         global_print_hparams = False
     return hparams_
+
 
 if __name__ == '__main__':
     set_hparams('checkpoints/1205_os_secc2planes/os_secc2plane_trigridv2/config.yaml')

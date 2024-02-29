@@ -1,4 +1,6 @@
 import os
+from pathlib import Path
+
 import numpy as np
 import torch
 import torch.nn as nn
@@ -10,11 +12,29 @@ from deep_3drecon.deep_3drecon_models.bfm import perspective_projection
 class Face3DHelper(nn.Module):
     def __init__(self, bfm_dir='deep_3drecon/BFM', keypoint_mode='lm68', use_gpu=True):
         super().__init__()
+        self.base_dir = ""
         self.keypoint_mode = keypoint_mode # lm68 | mediapipe
-        self.bfm_dir = bfm_dir
+        self.bfm_dir = self.get_win_dir(bfm_dir,"")
         self.load_3dmm()
         if use_gpu: self.to("cuda")
-            
+
+    def get_win_dir(self, dir_strs: str, file: str):
+        cur_dir = os.getcwd()
+        self.base_dir = Path(cur_dir)
+        while self.base_dir.stem.find("GeneFace") != 0:
+            self.base_dir = self.base_dir.parent
+        if dir_strs !="" :
+            base_dir_temp = self.base_dir
+            ds = dir_strs.split("/")
+            if len(ds) == 1:
+                ds = dir_strs.split("\\")
+            for s in ds:
+                base_dir_temp = os.path.join(base_dir_temp, s)
+            if file != "":
+                base_dir_temp = os.path.join(base_dir_temp, file)
+            return base_dir_temp
+        return self.base_dir
+
     def load_3dmm(self):
         model = loadmat(os.path.join(self.bfm_dir, "BFM_model_front.mat"))
         self.register_buffer('mean_shape',torch.from_numpy(model['meanshape'].transpose()).float()) # mean face shape. [3*N, 1], N=35709, xyz=3, ==> 3*N=107127
@@ -31,7 +51,10 @@ class Face3DHelper(nn.Module):
         self.register_buffer('point_buf',torch.from_numpy(model['point_buf']).float()) # triangle indices for each vertex that lies in. starts from 1. [N,8] (1-F)
         self.register_buffer('face_buf',torch.from_numpy(model['tri']).float()) # vertex indices in each triangle. starts from 1. [F,3] (1-N)
         if self.keypoint_mode == 'mediapipe':
-            self.register_buffer('key_points', torch.from_numpy(np.load("deep_3drecon/BFM/index_mp468_from_mesh35709.npy").astype(np.int64)))
+            dir_bfm_mess = "deep_3drecon/BFM/index_mp468_from_mesh35709.npy"
+            if  os.name == "nt":
+                dir_bfm_mess = self.get_win_dir(dir_bfm_mess,"")
+            self.register_buffer('key_points', torch.from_numpy(np.load(dir_bfm_mess).astype(np.int64)))
             unmatch_mask = self.key_points < 0
             self.key_points[unmatch_mask] = 0
         else:

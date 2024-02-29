@@ -197,6 +197,8 @@ class RADNeRFTask(BaseTask):
         }
         total_loss = sum([loss_weights.get(k, 1) * v for k, v in loss_output.items() if isinstance(v, torch.Tensor) and v.requires_grad])
         def mse2psnr(x): return -10. * torch.log(x) / torch.log(torch.Tensor([10.])).to(x.device)
+
+        print("head_psnr1:________________________________________________")
         loss_output['head_psnr'] = mse2psnr(loss_output['mse_loss'].detach())
         outputs.update(loss_output)
 

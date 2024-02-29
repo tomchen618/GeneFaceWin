@@ -4,6 +4,8 @@ import time
 import subprocess
 import traceback
 import socket
+from pathlib import Path
+
 import setproctitle
 
 from torch.cuda.amp import GradScaler, autocast
@@ -602,8 +604,24 @@ class Trainer:
         if you found num_worker is larger than world_size, remove the old shard_file_name
         """
         exp_name = hparams['exp_name']
+
         shared_file_name = f'file:///home/tiger/nfs/pytorch_ddp_sharedfile/{exp_name}'
-        os.makedirs(os.path.dirname(shared_file_name).replace("file://", ""), exist_ok=True)
+        if os.name == 'nt':
+            curr_dir = os.getcwd()
+            base_dir = Path(curr_dir)
+            while base_dir.stem.find('GeneFace') != 0:
+                base_dir = base_dir.parent
+            paths = [ "sharedfiles", "nfs", "pytorch_ddp_sharedfile"]
+            for p in paths:
+                base_dir = os.path.join (base_dir, p)
+                if not os.path.exists(p) :
+                    os.makedirs(base_dir)
+            exp_name_path = os.path.join(base_dir,exp_name)
+            if not os.path.exists(exp_name_path):
+                os.makedirs(exp_name_path)
+            shared_file_name = f"file:///{exp_name_path}"
+        else:
+            os.makedirs(os.path.dirname(shared_file_name).replace("file://", ""), exist_ok=True)
         dist.init_process_group('nccl', init_method=shared_file_name,
                                 world_size=world_size, rank=proc_rank)
 
