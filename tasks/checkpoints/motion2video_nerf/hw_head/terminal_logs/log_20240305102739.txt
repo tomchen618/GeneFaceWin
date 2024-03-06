@@ -1,3 +1,0 @@
-code directory: checkpoints/motion2video_nerf/hw_head/codes/20240305102739
-| Copied codes to checkpoints/motion2video_nerf/hw_head/codes/20240305102739.
-Backend QtAgg is interactive backend. Turning interactive mode on.

@@ -1,2 +1,0 @@
-code directory: checkpoints/motion2video_nerf/hw_head/codes/20240304163724
-| Copied codes to checkpoints/motion2video_nerf/hw_head/codes/20240304163724.
