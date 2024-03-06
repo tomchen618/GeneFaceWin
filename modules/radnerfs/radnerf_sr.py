@@ -1,15 +1,12 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 import copy
-import random
 
-from modules.radnerfs.encoders.encoding import get_encoder
+from modules.radnerfs import get_encoder
 from modules.radnerfs.renderer import NeRFRenderer
-from modules.radnerfs.cond_encoder import AudioNet, AudioAttNet, MLP, HeatMapEncoder, HeatMapAttNet
+from modules.radnerfs.cond_encoder import AudioNet, AudioAttNet, MLP
 from modules.radnerfs.utils import trunc_exp
 from modules.eg3ds.models.superresolution import *
-
 
 class Superresolution(torch.nn.Module):
     def __init__(self, channels=32, img_resolution=512, sr_antialias=True):

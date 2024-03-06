@@ -2,45 +2,36 @@ import os
 import sys
 from pathlib import Path
 
+from modules.radnerfs.radnerf_sr import RADNeRFwithSR
+
 sys.path.append('./')
 
 import torch
-import torch.nn.functional as F
-import librosa
-import random
-import time
 import numpy as np
-import importlib
-import tqdm
 import copy
 import cv2
-import uuid
 import traceback
 # common utils
 from utils.commons.hparams import hparams, set_hparams
-from utils.commons.tensor_utils import move_to_cuda, convert_to_np, convert_to_tensor
-from utils.commons.ckpt_utils import load_ckpt, get_last_checkpoint
+from utils.commons.tensor_utils import convert_to_np, convert_to_tensor
+from utils.commons.ckpt_utils import load_ckpt
 # 3DMM-related utils
-from deep_3drecon.deep_3drecon_models.bfm import ParametricFaceModel
 from data_util.face3d_helper import Face3DHelper
 from deep_3drecon.secc_renderer import SECC_Renderer
-from data_gen.eg3d.convert_to_eg3d_convention import get_eg3d_convention_camera_pose_intrinsic
 from data_gen.utils.mp_feature_extractors.face_landmarker import index_lm68_from_lm478, index_lm131_from_lm478
 # Face Parsing 
 from data_gen.utils.mp_feature_extractors.mp_segmenter import MediapipeSegmenter
-from data_gen.utils.process_video.extract_segment_imgs import inpaint_torso_job, extract_background
 # other inference utils
-from inference.infer_utils import mirror_index, load_img_to_512_hwc_array, load_img_to_normalized_512_bchw_tensor
-from inference.infer_utils import smooth_camera_sequence, smooth_features_xd
+from inference.infer_utils import mirror_index
+from inference.infer_utils import smooth_features_xd
 from utils.commons.pitch_utils import f0_to_coarse
 # Dataset Related
-from tasks.radnerfs.dataset_utils import RADNeRFDataset, get_boundary_mask, dilate_boundary_mask, get_lf_boundary_mask
+from tasks.radnerfs.dataset_utils import RADNeRFDataset
 # Method Related
 from modules.audio2motion.vae import VAEModel, PitchContourVAEModel
-from modules.postnet.lle import compute_LLE_projection, find_k_nearest_neighbors
-from modules.radnerfs.utils import get_audio_features, get_rays, get_bg_coords, convert_poses, nerf_matrix_to_ngp
+from modules.postnet.lle import compute_LLE_projection
+from modules.radnerfs.utils import get_audio_features, get_rays, convert_poses
 from modules.radnerfs.radnerf import RADNeRF
-from modules.radnerfs.radnerf_sr import RADNeRFwithSR
 from modules.radnerfs.radnerf_torso import RADNeRFTorso
 from modules.radnerfs.radnerf_torso_sr import RADNeRFTorsowithSR
 
@@ -617,7 +608,7 @@ class GeneFace2Infer:
 
 
 if __name__ == '__main__':
-    import argparse, glob, tqdm
+    import argparse, tqdm
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--a2m_ckpt",

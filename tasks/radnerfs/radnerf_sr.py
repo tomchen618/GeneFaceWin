@@ -5,17 +5,15 @@ import numpy as np
 import math
 import os
 import cv2
-import lpips
 import matplotlib.pyplot as plt
 import traceback
 
 from modules.radnerfs.radnerf_sr import RADNeRFwithSR
-from modules.radnerfs.utils import convert_poses, get_bg_coords, get_rays
+from modules.radnerfs.utils import convert_poses, get_rays, get_bg_coords
 from tasks.radnerfs.losses import PerceptualLoss
 from modules.eg3ds.models.dual_discriminator import DualDiscriminator
 from tasks.radnerfs.dataset_utils import RADNeRFDataset
 
-from utils.commons.image_utils import to8b
 from utils.commons.base_task import BaseTask
 from utils.commons.dataset_utils import data_loader
 from utils.commons.hparams import hparams

@@ -4,24 +4,25 @@ import torch
 import torch.nn as nn
 from torch.autograd import Function
 from torch.autograd.function import once_differentiable
-from torch.cuda.amp import custom_bwd, custom_fwd 
+from torch.cuda.amp import custom_bwd, custom_fwd
 
 try:
     import _shencoder as _backend
 except ImportError:
     from .backend import _backend
 
+
 class _sh_encoder(Function):
     @staticmethod
-    @custom_fwd(cast_inputs=torch.float32) # force float32 for better precision
+    @custom_fwd(cast_inputs=torch.float32)  # force float32 for better precision
     def forward(ctx, inputs, degree, calc_grad_inputs=False):
         # inputs: [B, input_dim], float in [-1, 1]
         # RETURN: [B, F], float
 
         inputs = inputs.contiguous()
-        B, input_dim = inputs.shape # batch size, coord dim
+        B, input_dim = inputs.shape  # batch size, coord dim
         output_dim = degree ** 2
-        
+
         outputs = torch.empty(B, output_dim, dtype=inputs.dtype, device=inputs.device)
 
         if calc_grad_inputs:
@@ -35,9 +36,9 @@ class _sh_encoder(Function):
         ctx.dims = [B, input_dim, degree]
 
         return outputs
-    
+
     @staticmethod
-    #@once_differentiable
+    # @once_differentiable
     @custom_bwd
     def backward(ctx, grad):
         # grad: [B, C * C]
@@ -54,7 +55,6 @@ class _sh_encoder(Function):
             return None, None, None
 
 
-
 sh_encode = _sh_encoder.apply
 
 
@@ -62,21 +62,21 @@ class SHEncoder(nn.Module):
     def __init__(self, input_dim=3, degree=4):
         super().__init__()
 
-        self.input_dim = input_dim # coord dims, must be 3
-        self.degree = degree # 0 ~ 4
+        self.input_dim = input_dim  # coord dims, must be 3
+        self.degree = degree  # 0 ~ 4
         self.output_dim = degree ** 2
 
         assert self.input_dim == 3, "SH encoder only support input dim == 3"
-        assert self.degree > 0 and self.degree <= 8, "SH encoder only supports degree in [1, 8]"
-        
+        assert 0 < self.degree <= 8, "SH encoder only supports degree in [1, 8]"
+
     def __repr__(self):
         return f"SHEncoder: input_dim={self.input_dim} degree={self.degree}"
-    
+
     def forward(self, inputs, size=1):
         # inputs: [..., input_dim], normalized real world positions in [-size, size]
         # return: [..., degree^2]
 
-        inputs = inputs / size # [-1, 1]
+        inputs = inputs / size  # [-1, 1]
 
         prefix_shape = list(inputs.shape[:-1])
         inputs = inputs.reshape(-1, self.input_dim)

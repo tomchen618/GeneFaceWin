@@ -137,7 +137,6 @@ class PerceptualLoss(nn.Module):
         self.vgg19 = _vgg19(layers_weight.keys())
         self.vggface = _vgg_face(layers_weight.keys())
         self.mse_criterion = nn.MSELoss()
-        print("Tom: mse_criterion:", self.mse_criterion)
         self.criterion = nn.L1Loss()
         self.layers_weight, self.n_scale = layers_weight, n_scale
         self.vgg19_loss_weight = vgg19_loss_weight

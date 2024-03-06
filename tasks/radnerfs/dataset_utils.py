@@ -13,12 +13,9 @@ from data_gen.eg3d.convert_to_eg3d_convention import get_eg3d_convention_camera_
 from utils.commons.hparams import hparams, set_hparams
 from utils.commons.tensor_utils import convert_to_tensor, convert_to_np
 from utils.commons.image_utils import load_image_as_uint8_tensor
-from utils.commons.meters import Timer
 
 from modules.radnerfs.utils import get_audio_features, get_rays, get_bg_coords, convert_poses, nerf_matrix_to_ngp
 from data_util.face3d_helper import Face3DHelper
-from data_gen.utils.mp_feature_extractors.mp_segmenter import decode_segmap_mask_from_image
-from data_gen.utils.mp_feature_extractors.face_landmarker import index_lm68_from_lm478
 
 face3d_helper = None
 
